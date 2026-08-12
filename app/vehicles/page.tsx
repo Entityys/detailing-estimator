@@ -21,6 +21,13 @@ export default async function VehiclesPage({
 }) {
   const params = await searchParams;
   const checkText = params.check?.trim() || "";
+  // Drop a leading model-year token (e.g. "2019 Nissan Altima" -> "Nissan Altima")
+  // so the quick-save suggestion doesn't put the year in the make field.
+  const checkWords = checkText.split(/\s+/).filter(Boolean);
+  const checkWordsNoYear =
+    checkWords.length > 1 && /^(19|20)\d{2}$/.test(checkWords[0]) ? checkWords.slice(1) : checkWords;
+  const suggestedMake = checkWordsNoYear.slice(0, -1).join(" ") || checkWordsNoYear[0] || "";
+  const suggestedModel = checkWordsNoYear.slice(-1).join(" ");
 
   const [vehiclesRaw, result] = await Promise.all([
     sql`SELECT * FROM vehicle_size_map ORDER BY tier, make, model`,
@@ -77,11 +84,11 @@ export default async function VehiclesPage({
 
             {result.confidence === "AMBIGUOUS" && (
               <form action={addVehicle} className="flex flex-wrap items-end gap-2 mt-3 pt-3 border-t border-neutral-800">
-                <input type="hidden" name="make" value={checkText.split(" ").slice(0, -1).join(" ") || checkText} />
+                <input type="hidden" name="make" value={suggestedMake} />
                 <input
                   name="model"
                   placeholder="Model to save"
-                  defaultValue={checkText.split(" ").slice(-1).join(" ")}
+                  defaultValue={suggestedModel}
                   className="bg-neutral-800 border border-neutral-700 rounded px-2 py-1.5 text-xs text-neutral-100 flex-1 min-w-[120px]"
                 />
                 <select
