@@ -15,9 +15,13 @@ export default async function LoginPage({
         action={login}
         className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4"
       >
-        <div>
-          <h1 className="text-lg font-semibold text-neutral-100">Entity Mobile Detailing</h1>
-          <p className="text-sm text-neutral-400">Estimator dashboard</p>
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Entity Mobile Detailing" width={48} height={48} className="rounded-lg object-cover" />
+          <div>
+            <h1 className="text-lg font-semibold text-neutral-100">Entity Mobile Detailing</h1>
+            <p className="text-sm text-neutral-400">Estimator dashboard</p>
+          </div>
         </div>
         <input type="hidden" name="next" value={next} />
         <div>
@@ -30,13 +34,13 @@ export default async function LoginPage({
             type="password"
             autoFocus
             required
-            className="w-full rounded-md bg-neutral-800 border border-neutral-700 px-3 py-2 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md bg-neutral-800 border border-neutral-700 px-3 py-2 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
         {hasError && <p className="text-sm text-red-400">Wrong passcode — try again.</p>}
         <button
           type="submit"
-          className="w-full rounded-md bg-blue-600 hover:bg-blue-500 text-white py-2 font-medium transition"
+          className="w-full rounded-md bg-brand hover:bg-brand-dark text-white py-2 font-medium transition"
         >
           Sign in
         </button>

@@ -1,5 +1,6 @@
 import { sql } from "@/lib/db";
 import { SERVICE_CATEGORIES, SIZE_TIER_LABELS, type SizeTier } from "@/lib/priceBook";
+import { Header } from "@/components/Header";
 import { approve, rejectItem, updateTierAndCategory } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,8 @@ interface QueueItem {
   far_out_of_area: boolean;
   status: string;
   created_at: string;
+  flyra_estimate_link: string | null;
+  sent_at: string | null;
 }
 
 function money(cents: number | null): string {
@@ -31,202 +34,275 @@ function money(cents: number | null): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-function Badge({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+function firstName(name: string | null): string {
+  if (!name) return "Unknown";
+  return name.trim().split(/\s+/)[0];
+}
+
+function initial(name: string | null): string {
+  return firstName(name).charAt(0).toUpperCase() || "?";
+}
+
+function serviceName(categoryId: string | null): string {
+  return SERVICE_CATEGORIES.find((c) => c.id === categoryId)?.name || "Service not set";
+}
+
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+const COLUMN_STYLES = {
+  slate: { dot: "bg-slate-400", header: "text-slate-300", border: "border-slate-800", badge: "bg-slate-800 text-slate-300" },
+  amber: { dot: "bg-amber-400", header: "text-amber-300", border: "border-amber-900/60", badge: "bg-amber-900/50 text-amber-300" },
+  blue: { dot: "bg-blue-400", header: "text-blue-300", border: "border-blue-900/60", badge: "bg-blue-900/50 text-blue-300" },
+  emerald: { dot: "bg-emerald-400", header: "text-emerald-300", border: "border-emerald-900/60", badge: "bg-emerald-900/50 text-emerald-300" },
+} as const;
+
+function CardShell({
+  color,
+  children,
+}: {
+  color: keyof typeof COLUMN_STYLES;
+  children: React.ReactNode;
+}) {
+  const s = COLUMN_STYLES[color];
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-        ok ? "bg-emerald-900/50 text-emerald-300" : "bg-amber-900/50 text-amber-300"
-      }`}
-    >
+    <div className={`rounded-xl border ${s.border} bg-neutral-900 p-4 space-y-3 shadow-sm shadow-black/20`}>
       {children}
-    </span>
+    </div>
+  );
+}
+
+function CardHeader({ item, color }: { item: QueueItem; color: keyof typeof COLUMN_STYLES }) {
+  const s = COLUMN_STYLES[color];
+  return (
+    <div className="flex items-start gap-3">
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${s.badge} font-semibold text-sm`}>
+        {initial(item.customer_name)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-neutral-100 truncate">{firstName(item.customer_name)}</div>
+        <div className="text-sm text-neutral-300 truncate">{serviceName(item.matched_category_id)}</div>
+        <div className="text-sm text-neutral-500 truncate">{item.raw_vehicle_text || "vehicle not provided"}</div>
+      </div>
+    </div>
+  );
+}
+
+function ColumnHeader({
+  title,
+  count,
+  color,
+}: {
+  title: string;
+  count: number;
+  color: keyof typeof COLUMN_STYLES;
+}) {
+  const s = COLUMN_STYLES[color];
+  return (
+    <div className="flex items-center gap-2 px-1 mb-3 sticky top-0">
+      <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+      <h2 className={`text-sm font-semibold ${s.header}`}>{title}</h2>
+      <span className="text-xs text-neutral-600 bg-neutral-900 border border-neutral-800 rounded-full px-1.5 py-0.5">
+        {count}
+      </span>
+    </div>
   );
 }
 
 export default async function QueuePage() {
   const items = (await sql`
-    SELECT * FROM queue_items WHERE status IN ('pending', 'approved') ORDER BY created_at DESC
+    SELECT * FROM queue_items
+    WHERE status IN ('missing_info', 'pending', 'approved', 'sent')
+    ORDER BY created_at DESC
   `) as QueueItem[];
 
+  const missingInfo = items.filter((i) => i.status === "missing_info");
   const pending = items.filter((i) => i.status === "pending");
   const approvedItems = items.filter((i) => i.status === "approved");
+  const sentItems = items.filter((i) => i.status === "sent").slice(0, 20);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold text-neutral-100">Review Queue</h1>
-        <nav className="text-sm text-neutral-400 space-x-4">
-          <a href="/vehicles" className="hover:text-neutral-200">
-            Size list
-          </a>
-          <a href="/log" className="hover:text-neutral-200">
-            History
-          </a>
-        </nav>
+    <div className="max-w-[1600px] mx-auto px-4 py-8 space-y-6">
+      <Header active="queue" />
+      <div>
+        <h1 className="text-xl font-semibold text-neutral-100">Pipeline</h1>
+        <p className="text-sm text-neutral-500">Every active lead, from first text to estimate sent.</p>
       </div>
 
-      {approvedItems.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-xs uppercase tracking-wide text-neutral-500">
-            Approved — sending on the next automation run
-          </h2>
-          {approvedItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between bg-neutral-900/60 border border-neutral-800 rounded-lg px-4 py-2 text-sm"
-            >
-              <span className="text-neutral-200">
-                {item.customer_name} — {item.raw_vehicle_text}
-              </span>
-              <span className="text-neutral-400">{money(item.total_price_cents)}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {pending.length === 0 && (
-        <p className="text-neutral-500 text-sm">Nothing waiting on you right now.</p>
-      )}
-
-      {pending.map((item) => {
-        const canApprove = !!item.matched_tier && !!item.matched_category_id;
-        const needsAttention = item.tier_confidence === "AMBIGUOUS" || item.category_confidence === "AMBIGUOUS";
-
-        return (
-          <div
-            key={item.id}
-            className={`rounded-xl border p-5 space-y-4 bg-neutral-900 ${
-              needsAttention ? "border-amber-800" : "border-neutral-800"
-            }`}
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="font-medium text-neutral-100">{item.customer_name || "Unknown"}</div>
-                <div className="text-sm text-neutral-400">
-                  {item.phone} {item.city ? `· ${item.city}` : ""}
+      <div className="flex gap-4 overflow-x-auto pb-4">
+        {/* Missing info */}
+        <div className="min-w-[300px] w-[300px] shrink-0">
+          <ColumnHeader title="Waiting on Customer" count={missingInfo.length} color="slate" />
+          <div className="space-y-3">
+            {missingInfo.length === 0 && <EmptyHint>No one's waiting on a reply.</EmptyHint>}
+            {missingInfo.map((item) => (
+              <CardShell key={item.id} color="slate">
+                <CardHeader item={item} color="slate" />
+                <div className="text-xs text-neutral-500 border-t border-neutral-800 pt-2">
+                  Texted asking what they drive · {timeAgo(item.created_at)}
                 </div>
-              </div>
-              {item.far_out_of_area && <Badge ok={false}>Far out of area</Badge>}
-            </div>
-
-            <div className="text-sm space-y-1">
-              <div>
-                <span className="text-neutral-500">Vehicle:</span>{" "}
-                <span className="text-neutral-200">{item.raw_vehicle_text || "(not provided)"}</span>
-              </div>
-              <div>
-                <span className="text-neutral-500">Requested service:</span>{" "}
-                <span className="text-neutral-200">{item.raw_service_text || "(not provided)"}</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-neutral-500">Size tier</span>
-                  <Badge ok={item.tier_confidence === "CONFIDENT"}>
-                    {item.tier_confidence === "CONFIDENT" ? "confident" : "needs review"}
-                  </Badge>
-                </div>
-                <div className="text-neutral-200">
-                  {item.matched_tier ? SIZE_TIER_LABELS[item.matched_tier] : "Not set"}
-                </div>
-                <div className="text-xs text-neutral-500">{item.tier_reason}</div>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-neutral-500">Service</span>
-                  <Badge ok={item.category_confidence === "CONFIDENT"}>
-                    {item.category_confidence === "CONFIDENT" ? "confident" : "needs review"}
-                  </Badge>
-                </div>
-                <div className="text-neutral-200">
-                  {SERVICE_CATEGORIES.find((c) => c.id === item.matched_category_id)?.name || "Not set"}
-                </div>
-                <div className="text-xs text-neutral-500">{item.category_reason}</div>
-              </div>
-            </div>
-
-            <form action={updateTierAndCategory.bind(null, item.id)} className="flex flex-wrap items-end gap-3 bg-neutral-950 border border-neutral-800 rounded-lg p-3">
-              <div>
-                <label className="block text-xs text-neutral-500 mb-1">Size tier</label>
-                <select
-                  name="tier"
-                  defaultValue={item.matched_tier ?? ""}
-                  className="bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-sm text-neutral-100"
-                >
-                  <option value="" disabled>
-                    Choose…
-                  </option>
-                  {Object.entries(SIZE_TIER_LABELS).map(([tier, label]) => (
-                    <option key={tier} value={tier}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-neutral-500 mb-1">Service</label>
-                <select
-                  name="categoryId"
-                  defaultValue={item.matched_category_id ?? ""}
-                  className="bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-sm text-neutral-100"
-                >
-                  <option value="" disabled>
-                    Choose…
-                  </option>
-                  {SERVICE_CATEGORIES.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="submit"
-                className="text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-3 py-1.5 rounded"
-              >
-                Save
-              </button>
-            </form>
-
-            <div className="flex items-center justify-between border-t border-neutral-800 pt-3">
-              <div className="text-sm text-neutral-300 space-x-3">
-                <span>Base: {money(item.base_price_cents)}</span>
-                {item.travel_fee_cents > 0 && <span>+ Travel: {money(item.travel_fee_cents)}</span>}
-                <span className="font-semibold text-neutral-100">
-                  Total: {money(item.total_price_cents)}
-                </span>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <div className="flex gap-2">
-                  <form action={rejectItem.bind(null, item.id)}>
-                    <button
-                      type="submit"
-                      className="text-sm bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-1.5 rounded"
-                    >
-                      Reject
-                    </button>
-                  </form>
-                  <form action={approve.bind(null, item.id)}>
-                    <button
-                      type="submit"
-                      disabled={!canApprove}
-                      className="text-sm bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 text-white px-3 py-1.5 rounded font-medium"
-                    >
-                      Approve
-                    </button>
-                  </form>
-                </div>
-                <span className="text-xs text-neutral-600">Sends automatically within the hour</span>
-              </div>
-            </div>
-            {item.zone_reason && (
-              <div className="text-xs text-neutral-600">{item.zone_reason}</div>
-            )}
+              </CardShell>
+            ))}
           </div>
-        );
-      })}
+        </div>
+
+        {/* Needs review */}
+        <div className="min-w-[360px] w-[360px] shrink-0">
+          <ColumnHeader title="Needs Your Review" count={pending.length} color="amber" />
+          <div className="space-y-3">
+            {pending.length === 0 && <EmptyHint>Nothing waiting on you right now.</EmptyHint>}
+            {pending.map((item) => {
+              const canApprove = !!item.matched_tier && !!item.matched_category_id;
+              const needsAttention =
+                item.tier_confidence === "AMBIGUOUS" || item.category_confidence === "AMBIGUOUS";
+
+              return (
+                <CardShell key={item.id} color="amber">
+                  <CardHeader item={item} color="amber" />
+                  <div className="text-xs text-neutral-500 flex items-center gap-2">
+                    <span>{item.phone}</span>
+                    {item.city && <span>· {item.city}</span>}
+                    {item.far_out_of_area && (
+                      <span className="text-red-400 font-medium">· far out of area</span>
+                    )}
+                  </div>
+
+                  {needsAttention && (
+                    <form
+                      action={updateTierAndCategory.bind(null, item.id)}
+                      className="flex flex-wrap items-end gap-2 bg-neutral-950 border border-amber-900/40 rounded-lg p-2.5"
+                    >
+                      <div className="flex-1 min-w-[100px]">
+                        <label className="block text-[10px] uppercase tracking-wide text-neutral-500 mb-1">
+                          Size
+                        </label>
+                        <select
+                          name="tier"
+                          defaultValue={item.matched_tier ?? ""}
+                          className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-neutral-100"
+                        >
+                          <option value="" disabled>
+                            Choose…
+                          </option>
+                          {Object.entries(SIZE_TIER_LABELS).map(([tier, label]) => (
+                            <option key={tier} value={tier}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex-1 min-w-[130px]">
+                        <label className="block text-[10px] uppercase tracking-wide text-neutral-500 mb-1">
+                          Service
+                        </label>
+                        <select
+                          name="categoryId"
+                          defaultValue={item.matched_category_id ?? ""}
+                          className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-neutral-100"
+                        >
+                          <option value="" disabled>
+                            Choose…
+                          </option>
+                          {SERVICE_CATEGORIES.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="submit"
+                        className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2.5 py-1.5 rounded"
+                      >
+                        Save
+                      </button>
+                    </form>
+                  )}
+
+                  <div className="flex items-center justify-between border-t border-neutral-800 pt-2.5">
+                    <span className="font-semibold text-neutral-100">{money(item.total_price_cents)}</span>
+                    <div className="flex gap-2">
+                      <form action={rejectItem.bind(null, item.id)}>
+                        <button
+                          type="submit"
+                          className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2.5 py-1.5 rounded"
+                        >
+                          Reject
+                        </button>
+                      </form>
+                      <form action={approve.bind(null, item.id)}>
+                        <button
+                          type="submit"
+                          disabled={!canApprove}
+                          className="text-xs bg-brand hover:bg-brand-dark disabled:bg-neutral-800 disabled:text-neutral-600 text-white px-2.5 py-1.5 rounded font-medium"
+                        >
+                          Approve
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </CardShell>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Approved */}
+        <div className="min-w-[300px] w-[300px] shrink-0">
+          <ColumnHeader title="Approved" count={approvedItems.length} color="blue" />
+          <div className="space-y-3">
+            {approvedItems.length === 0 && <EmptyHint>Nothing queued to send.</EmptyHint>}
+            {approvedItems.map((item) => (
+              <CardShell key={item.id} color="blue">
+                <CardHeader item={item} color="blue" />
+                <div className="flex items-center justify-between border-t border-neutral-800 pt-2.5 text-sm">
+                  <span className="font-semibold text-neutral-100">{money(item.total_price_cents)}</span>
+                  <span className="text-xs text-neutral-500">sends within the hour</span>
+                </div>
+              </CardShell>
+            ))}
+          </div>
+        </div>
+
+        {/* Sent */}
+        <div className="min-w-[300px] w-[300px] shrink-0">
+          <ColumnHeader title="Sent" count={sentItems.length} color="emerald" />
+          <div className="space-y-3">
+            {sentItems.length === 0 && <EmptyHint>Nothing sent yet.</EmptyHint>}
+            {sentItems.map((item) => (
+              <CardShell key={item.id} color="emerald">
+                <CardHeader item={item} color="emerald" />
+                <div className="flex items-center justify-between border-t border-neutral-800 pt-2.5 text-sm">
+                  <span className="font-semibold text-neutral-100">{money(item.total_price_cents)}</span>
+                  {item.flyra_estimate_link ? (
+                    <a
+                      href={item.flyra_estimate_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-emerald-400 hover:text-emerald-300"
+                    >
+                      View estimate ↗
+                    </a>
+                  ) : (
+                    <span className="text-xs text-neutral-500">{item.sent_at ? timeAgo(item.sent_at) : ""}</span>
+                  )}
+                </div>
+              </CardShell>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
+}
+
+function EmptyHint({ children }: { children: React.ReactNode }) {
+  return <p className="text-sm text-neutral-600 px-1">{children}</p>;
 }

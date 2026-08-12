@@ -1,5 +1,6 @@
 import { sql } from "@/lib/db";
 import { SIZE_TIER_LABELS, SERVICE_CATEGORIES, type SizeTier } from "@/lib/priceBook";
+import { Header } from "@/components/Header";
 
 export const dynamic = "force-dynamic";
 
@@ -38,12 +39,8 @@ export default async function LogPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold text-neutral-100">History</h1>
-        <a href="/queue" className="text-sm text-neutral-400 hover:text-neutral-200">
-          Back to queue
-        </a>
-      </div>
+      <Header active="log" />
+      <h1 className="text-xl font-semibold text-neutral-100">History</h1>
 
       <div className="space-y-1">
         {rows.map((r) => (
