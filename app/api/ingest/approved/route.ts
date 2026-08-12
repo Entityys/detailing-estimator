@@ -1,20 +1,16 @@
-/**
- * Prints queue items the owner has approved on the dashboard but that
- * haven't been sent through Flyra yet. The agent reads this, then for each
- * item calls flyra_create_estimate / flyra_send_estimate / flyra_get_estimate_link
- * / flyra_send_sms itself (this script has no Flyra access), then calls
- * mark-sent.ts or mark-send-failed.ts with the result.
- *
- * Caps at 3 send attempts per item so a persistently-broken row doesn't
- * retry forever and spam Flyra — after that it stays "approved" but won't
- * appear here again until send_attempts is reset manually.
- *
- * Usage: npx tsx scripts/agent/list-approved.ts
- */
-import { sql } from "../../lib/db";
-import { getCategory, getPriceCents, SIZE_TIER_LABELS } from "../../lib/priceBook";
+import { NextRequest, NextResponse } from "next/server";
+import { checkIngestAuth } from "@/lib/ingestAuth";
+import { sql } from "@/lib/db";
+import { getCategory, SIZE_TIER_LABELS } from "@/lib/priceBook";
 
-async function main() {
+export const dynamic = "force-dynamic";
+
+// Owner-approved queue items not yet sent through Flyra. Capped at 3 send
+// attempts so a persistently-broken row doesn't retry forever.
+export async function GET(req: NextRequest) {
+  const authError = checkIngestAuth(req);
+  if (authError) return authError;
+
   const rows = (await sql`
     SELECT id, flyra_lead_id, customer_name, phone, city, matched_tier, matched_category_id,
            base_price_cents, travel_fee_cents, total_price_cents, send_attempts
@@ -67,10 +63,5 @@ async function main() {
     };
   });
 
-  console.log(JSON.stringify(enriched, null, 2));
+  return NextResponse.json(enriched);
 }
-
-main().catch((err) => {
-  console.error(JSON.stringify({ error: String(err?.message || err) }));
-  process.exit(1);
-});

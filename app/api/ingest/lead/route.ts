@@ -1,35 +1,24 @@
-/**
- * Used by the scheduled cloud routine. It calls the flyra_get_lead MCP tool
- * itself (this script has no Flyra access), then pipes the raw lead JSON in
- * here on stdin. This script does all the deterministic work — extraction,
- * classification, pricing, zone/fee — and writes the result to Postgres, so
- * the agent doesn't have to "reason" about pricing (keeps it consistent with
- * what the dashboard shows/edits).
- *
- * Usage: echo '<lead json>' | npx tsx scripts/agent/queue-lead.ts
- *
- * Prints one JSON line describing what happened and — importantly — what SMS
- * (if any) the agent should send next, since only the agent can call
- * flyra_send_sms.
- */
-import { initSchema, seedVehicleMapIfEmpty, sql } from "../../lib/db";
-import { classifyVehicle } from "../../lib/classify";
-import { matchServiceCategory, getPriceCents } from "../../lib/priceBook";
-import { evaluateZone } from "../../lib/zones";
-import { extractLeadInfo, type FlyraLead } from "../../lib/leadExtract";
+import { NextRequest, NextResponse } from "next/server";
+import { checkIngestAuth } from "@/lib/ingestAuth";
+import { sql } from "@/lib/db";
+import { classifyVehicle } from "@/lib/classify";
+import { matchServiceCategory, getPriceCents } from "@/lib/priceBook";
+import { evaluateZone } from "@/lib/zones";
+import { extractLeadInfo, type FlyraLead } from "@/lib/leadExtract";
 
-async function readStdin(): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
-  return Buffer.concat(chunks).toString("utf-8");
-}
+export const dynamic = "force-dynamic";
 
-async function main() {
-  const raw = await readStdin();
-  const lead = JSON.parse(raw) as FlyraLead;
+// Called by the scheduled automation once per new Flyra lead. The automation
+// itself has no database access — it calls flyra_get_lead (MCP), POSTs the
+// raw lead JSON here, and this route does all the deterministic
+// extraction/classification/pricing/insert work, keeping that logic in one
+// place (shared with what the dashboard displays/edits).
+export async function POST(req: NextRequest) {
+  const authError = checkIngestAuth(req);
+  if (authError) return authError;
 
-  await initSchema();
-  await seedVehicleMapIfEmpty();
+  const lead = (await req.json()) as FlyraLead;
+  if (!lead?.id) return NextResponse.json({ error: "missing lead.id" }, { status: 400 });
 
   const info = extractLeadInfo(lead);
   const tierResult = await classifyVehicle(info.vehicleText);
@@ -68,8 +57,7 @@ async function main() {
   `) as { id: number }[];
 
   if (inserted.length === 0) {
-    console.log(JSON.stringify({ inserted: false, leadId: lead.id }));
-    return;
+    return NextResponse.json({ inserted: false, leadId: lead.id });
   }
   const queueItemId = inserted[0].id;
 
@@ -78,7 +66,7 @@ async function main() {
   const firstName = info.customerName.split(" ")[0];
   const priceStr = totalCents !== null ? `$${(totalCents / 100).toFixed(2)}` : "price TBD";
 
-  const result = {
+  return NextResponse.json({
     inserted: true,
     queueItemId,
     leadId: lead.id,
@@ -94,11 +82,5 @@ async function main() {
           body: `New estimate to review: ${info.customerName} — ${info.vehicleText ?? "?"} — ${priceStr}. Open the dashboard to approve.`,
           reason: "owner_review_needed",
         },
-  };
-  console.log(JSON.stringify(result));
+  });
 }
-
-main().catch((err) => {
-  console.error(JSON.stringify({ error: String(err?.message || err) }));
-  process.exit(1);
-});
