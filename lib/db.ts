@@ -32,6 +32,7 @@ function ensureReady(): Promise<void> {
   if (!readyPromise) {
     readyPromise = initSchema()
       .then(() => seedVehicleMapIfEmpty())
+      .then(() => seedTemplatesIfEmpty())
       .catch((err) => {
         readyPromise = null; // allow retry on next call instead of caching a failure
         throw err;
@@ -110,6 +111,15 @@ export async function initSchema() {
       last_checked_at TIMESTAMPTZ
     )
   `;
+
+  await rawSql`
+    CREATE TABLE IF NOT EXISTS message_templates (
+      key TEXT PRIMARY KEY,
+      label TEXT NOT NULL,
+      body TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
 }
 
 const SEED_VEHICLES: { make: string; model: string; tier: string }[] = [
@@ -165,5 +175,31 @@ export async function seedVehicleMapIfEmpty() {
   if (count > 0) return;
   for (const v of SEED_VEHICLES) {
     await rawSql`INSERT INTO vehicle_size_map (make, model, tier, notes) VALUES (${v.make}, ${v.model}, ${v.tier}, 'seeded from owner reference list')`;
+  }
+}
+
+const DEFAULT_TEMPLATES: { key: string; label: string; body: string }[] = [
+  {
+    key: "missing_info",
+    label: "Ask for vehicle info",
+    body: "Hi {{firstName}}, thanks for reaching out to Entity Mobile Detailing! What vehicle (year/make/model) would you like serviced? That's the last thing we need to get you a quote.",
+  },
+  {
+    key: "owner_notification",
+    label: "Text me when a lead needs review",
+    body: "New estimate to review: {{customerName}} — {{vehicle}} — {{price}}. Open the dashboard to approve.",
+  },
+  {
+    key: "estimate_sent",
+    label: "Estimate sent to customer",
+    body: "Hi {{firstName}}, thanks for reaching out to Entity Mobile Detailing! Here's your estimate: {{link}}",
+  },
+];
+
+export async function seedTemplatesIfEmpty() {
+  const [{ count }] = await rawSql`SELECT COUNT(*)::int AS count FROM message_templates`;
+  if (count > 0) return;
+  for (const t of DEFAULT_TEMPLATES) {
+    await rawSql`INSERT INTO message_templates (key, label, body) VALUES (${t.key}, ${t.label}, ${t.body})`;
   }
 }

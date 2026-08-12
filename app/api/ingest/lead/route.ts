@@ -5,6 +5,7 @@ import { classifyVehicle } from "@/lib/classify";
 import { matchServiceCategory, getPriceCents } from "@/lib/priceBook";
 import { evaluateZone } from "@/lib/zones";
 import { extractLeadInfo, type FlyraLead } from "@/lib/leadExtract";
+import { renderTemplate } from "@/lib/templates";
 
 export const dynamic = "force-dynamic";
 
@@ -66,21 +67,22 @@ export async function POST(req: NextRequest) {
   const firstName = info.customerName.split(" ")[0];
   const priceStr = totalCents !== null ? `$${(totalCents / 100).toFixed(2)}` : "price TBD";
 
+  const smsBody =
+    isMissingInfo && info.phone
+      ? await renderTemplate("missing_info", { firstName })
+      : await renderTemplate("owner_notification", {
+          customerName: info.customerName,
+          vehicle: info.vehicleText ?? "?",
+          price: priceStr,
+        });
+
   return NextResponse.json({
     inserted: true,
     queueItemId,
     leadId: lead.id,
     status,
     sms: isMissingInfo && info.phone
-      ? {
-          toPhone: info.phone,
-          body: `Hi ${firstName}, thanks for reaching out to Entity Mobile Detailing! What vehicle (year/make/model) would you like serviced? That's the last thing we need to get you a quote.`,
-          reason: "missing_vehicle_info",
-        }
-      : {
-          toOwner: true,
-          body: `New estimate to review: ${info.customerName} — ${info.vehicleText ?? "?"} — ${priceStr}. Open the dashboard to approve.`,
-          reason: "owner_review_needed",
-        },
+      ? { toPhone: info.phone, body: smsBody, reason: "missing_vehicle_info" }
+      : { toOwner: true, body: smsBody, reason: "owner_review_needed" },
   });
 }
