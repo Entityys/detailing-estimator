@@ -15,11 +15,38 @@ function getClient(): NeonQueryFunction<false, false> {
   return client;
 }
 
-export const sql = ((...args: Parameters<NeonQueryFunction<false, false>>) =>
+// The raw, ungated client — only initSchema/seedVehicleMapIfEmpty use this,
+// so they don't deadlock waiting on the schema-ready gate they themselves
+// are trying to satisfy.
+const rawSql = ((...args: Parameters<NeonQueryFunction<false, false>>) =>
   getClient()(...args)) as NeonQueryFunction<false, false>;
 
+// Every serverless instance starts with an empty connection, and Vercel
+// deployments never ran a migration step — the first query against a fresh
+// database would 500 with "relation does not exist" otherwise. Gate every
+// query through this so the schema is guaranteed to exist, memoized so it
+// only actually runs once per warm instance.
+let readyPromise: Promise<void> | null = null;
+
+function ensureReady(): Promise<void> {
+  if (!readyPromise) {
+    readyPromise = initSchema()
+      .then(() => seedVehicleMapIfEmpty())
+      .catch((err) => {
+        readyPromise = null; // allow retry on next call instead of caching a failure
+        throw err;
+      });
+  }
+  return readyPromise;
+}
+
+export const sql = (async (...args: Parameters<NeonQueryFunction<false, false>>) => {
+  await ensureReady();
+  return getClient()(...args);
+}) as unknown as NeonQueryFunction<false, false>;
+
 export async function initSchema() {
-  await sql`
+  await rawSql`
     CREATE TABLE IF NOT EXISTS vehicle_size_map (
       id SERIAL PRIMARY KEY,
       make TEXT NOT NULL,
@@ -31,7 +58,7 @@ export async function initSchema() {
     )
   `;
 
-  await sql`
+  await rawSql`
     CREATE TABLE IF NOT EXISTS queue_items (
       id SERIAL PRIMARY KEY,
       flyra_lead_id TEXT NOT NULL UNIQUE,
@@ -65,9 +92,9 @@ export async function initSchema() {
       sent_at TIMESTAMPTZ
     )
   `;
-  await sql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS send_attempts INTEGER NOT NULL DEFAULT 0`;
+  await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS send_attempts INTEGER NOT NULL DEFAULT 0`;
 
-  await sql`
+  await rawSql`
     CREATE TABLE IF NOT EXISTS audit_log (
       id SERIAL PRIMARY KEY,
       queue_item_id INTEGER REFERENCES queue_items(id),
@@ -77,7 +104,7 @@ export async function initSchema() {
     )
   `;
 
-  await sql`
+  await rawSql`
     CREATE TABLE IF NOT EXISTS poll_state (
       id INTEGER PRIMARY KEY DEFAULT 1,
       last_checked_at TIMESTAMPTZ
@@ -134,9 +161,9 @@ const SEED_VEHICLES: { make: string; model: string; tier: string }[] = [
 ];
 
 export async function seedVehicleMapIfEmpty() {
-  const [{ count }] = await sql`SELECT COUNT(*)::int AS count FROM vehicle_size_map`;
+  const [{ count }] = await rawSql`SELECT COUNT(*)::int AS count FROM vehicle_size_map`;
   if (count > 0) return;
   for (const v of SEED_VEHICLES) {
-    await sql`INSERT INTO vehicle_size_map (make, model, tier, notes) VALUES (${v.make}, ${v.model}, ${v.tier}, 'seeded from owner reference list')`;
+    await rawSql`INSERT INTO vehicle_size_map (make, model, tier, notes) VALUES (${v.make}, ${v.model}, ${v.tier}, 'seeded from owner reference list')`;
   }
 }
