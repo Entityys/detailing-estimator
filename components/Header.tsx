@@ -3,10 +3,15 @@ const LINKS = [
   { href: "/pricebook", label: "Price Book" },
   { href: "/vehicles", label: "Size List" },
   { href: "/templates", label: "Templates" },
+  { href: "/stats", label: "Stats" },
   { href: "/log", label: "History" },
 ];
 
-export function Header({ active }: { active: "queue" | "pricebook" | "vehicles" | "templates" | "log" }) {
+export function Header({
+  active,
+}: {
+  active: "queue" | "pricebook" | "vehicles" | "templates" | "stats" | "log";
+}) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
       <a href="/queue" className="flex items-center gap-3">

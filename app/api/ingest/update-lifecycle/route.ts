@@ -1,0 +1,22 @@
+import { NextRequest, NextResponse } from "next/server";
+import { checkIngestAuth } from "@/lib/ingestAuth";
+import { sql } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+const ALLOWED = ["accepted", "declined", "scheduled", "completed"];
+
+export async function POST(req: NextRequest) {
+  const authError = checkIngestAuth(req);
+  if (authError) return authError;
+
+  const { queueItemId, status, detail } = await req.json();
+  if (!queueItemId || !ALLOWED.includes(status)) {
+    return NextResponse.json({ error: `status must be one of ${ALLOWED.join(", ")}` }, { status: 400 });
+  }
+
+  await sql`UPDATE queue_items SET status = ${status} WHERE id = ${queueItemId}`;
+  await sql`INSERT INTO audit_log (queue_item_id, event, detail) VALUES (${queueItemId}, ${`lifecycle_${status}`}, ${detail ?? null})`;
+
+  return NextResponse.json({ ok: true });
+}

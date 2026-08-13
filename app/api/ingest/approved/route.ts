@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
 
   const rows = (await sql`
     SELECT id, flyra_lead_id, customer_name, phone, city, matched_tier, matched_category_id,
-           base_price_cents, travel_fee_cents, total_price_cents, send_attempts
+           base_price_cents, travel_fee_cents, total_price_cents, send_attempts, addons,
+           adjustment_cents, adjustment_reason
     FROM queue_items
     WHERE status = 'approved' AND send_attempts < 3
     ORDER BY created_at ASC
@@ -29,6 +30,9 @@ export async function GET(req: NextRequest) {
     travel_fee_cents: number;
     total_price_cents: number;
     send_attempts: number;
+    addons: { id: string; name: string; priceCents: number }[];
+    adjustment_cents: number;
+    adjustment_reason: string | null;
   }[];
 
   const enriched = rows.map((r) => {
@@ -54,6 +58,24 @@ export async function GET(req: NextRequest) {
                 description: `Outside the no-fee service area (${r.city ?? "unknown city"})`,
                 qty: 1,
                 unit_price_cents: r.travel_fee_cents,
+                taxable: false,
+              },
+            ]
+          : []),
+        ...r.addons.map((a) => ({
+          name: a.name,
+          description: "",
+          qty: 1,
+          unit_price_cents: a.priceCents,
+          taxable: true,
+        })),
+        ...(r.adjustment_cents !== 0
+          ? [
+              {
+                name: "Adjustment",
+                description: r.adjustment_reason ?? "",
+                qty: 1,
+                unit_price_cents: r.adjustment_cents,
                 taxable: false,
               },
             ]

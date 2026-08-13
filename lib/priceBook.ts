@@ -166,6 +166,41 @@ export function getPriceCents(categoryId: string, tier: SizeTier): number | unde
   return getCategory(categoryId)?.pricesCents[tier];
 }
 
+export interface AddOn {
+  id: string;
+  name: string;
+  priceCents: number;
+  keywords: string[]; // for auto-suggesting from a lead's free-text answers
+}
+
+export const ADD_ONS: AddOn[] = [
+  { id: "odor_elimination", name: "Odor Elimination", priceCents: 7500, keywords: ["odor", "smell", "smoke"] },
+  { id: "engine_bay_cleaning", name: "Engine Bay Cleaning", priceCents: 5000, keywords: ["engine bay", "engine"] },
+  { id: "stain_removal", name: "Stain Removal", priceCents: 5000, keywords: ["stain"] },
+  { id: "pet_hair_removal", name: "Pet Hair Removal", priceCents: 7500, keywords: ["pet hair", "dog hair", "cat hair", "pet", "dog", "cat"] },
+  { id: "carpet_seat_shampoo", name: "Carpet/Seat Shampoo & Extraction", priceCents: 10000, keywords: ["shampoo", "extraction"] },
+  { id: "leather_conditioning", name: "Leather Conditioning", priceCents: 5000, keywords: ["leather"] },
+  { id: "sap_removal", name: "Sap Removal", priceCents: 5000, keywords: ["sap", "tree sap"] },
+  { id: "headlight_restoration", name: "Headlight Restoration", priceCents: 10000, keywords: ["headlight", "foggy headlight", "yellow headlight"] },
+  { id: "windshield_ceramic_coating", name: "Windshield Ceramic Coating", priceCents: 17500, keywords: ["windshield coating", "rain repellent"] },
+  { id: "interior_plastics_conditioning", name: "Interior Plastics Conditioning", priceCents: 5000, keywords: ["plastic", "dashboard fading"] },
+  { id: "protector_wax", name: "Protector Wax", priceCents: 3000, keywords: ["wax"] },
+  { id: "biohazard_mold_removal", name: "Biohazard/Mold Removal", priceCents: 15000, keywords: ["mold", "mildew", "biohazard"] },
+  { id: "clay_bar_treatment", name: "Clay Bar Treatment", priceCents: 5000, keywords: ["clay bar", "clay"] },
+];
+
+export function getAddOn(id: string): AddOn | undefined {
+  return ADD_ONS.find((a) => a.id === id);
+}
+
+// Scans free text (service answer, notes, etc.) for add-on keywords so the
+// dashboard can pre-suggest them instead of the owner hunting through a list.
+export function suggestAddOns(text: string | null | undefined): string[] {
+  if (!text) return [];
+  const t = text.toLowerCase();
+  return ADD_ONS.filter((a) => a.keywords.some((kw) => t.includes(kw))).map((a) => a.id);
+}
+
 // Keyword matching from free-text lead form answers ("what service are you
 // interested in?") to a category. Order matters — more specific phrases first.
 // Returns null when the phrase is genuinely ambiguous between Standard/RESTORE.

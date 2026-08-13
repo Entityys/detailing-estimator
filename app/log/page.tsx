@@ -23,9 +23,28 @@ function money(cents: number | null): string {
 
 const STATUS_STYLE: Record<string, string> = {
   sent: "text-emerald-400",
+  accepted: "text-emerald-400",
+  scheduled: "text-emerald-400",
+  completed: "text-emerald-400",
+  declined: "text-red-400",
   rejected: "text-red-400",
+  deleted: "text-neutral-700",
+  approved: "text-blue-400",
   pending: "text-amber-400",
   missing_info: "text-neutral-500",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  missing_info: "waiting on customer",
+  pending: "needs review",
+  approved: "approved",
+  sent: "sent",
+  accepted: "accepted",
+  declined: "declined",
+  scheduled: "scheduled",
+  completed: "completed",
+  rejected: "rejected",
+  deleted: "deleted",
 };
 
 export default async function LogPage() {
@@ -46,7 +65,9 @@ export default async function LogPage() {
         {rows.map((r) => (
           <div
             key={r.id}
-            className="flex items-center justify-between bg-neutral-900 border border-neutral-800 rounded px-3 py-2 text-sm"
+            className={`flex items-center justify-between bg-neutral-900 border border-neutral-800 rounded px-3 py-2 text-sm ${
+              r.status === "deleted" ? "opacity-50" : ""
+            }`}
           >
             <div>
               <span className="text-neutral-100">{r.customer_name || "Unknown"}</span>
@@ -65,7 +86,7 @@ export default async function LogPage() {
             <div className="flex items-center gap-3">
               <span className="text-neutral-300">{money(r.total_price_cents)}</span>
               <span className={`text-xs font-medium ${STATUS_STYLE[r.status] ?? "text-neutral-500"}`}>
-                {r.status}
+                {STATUS_LABEL[r.status] ?? r.status}
               </span>
             </div>
           </div>

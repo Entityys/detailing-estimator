@@ -95,6 +95,19 @@ export async function initSchema() {
   `;
   await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS send_attempts INTEGER NOT NULL DEFAULT 0`;
 
+  // Add-ons selected at approval time (array of {id, name, priceCents}) and a
+  // manual price adjustment, both applied as extra line items when the
+  // estimate is actually sent.
+  await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS addons JSONB NOT NULL DEFAULT '[]'::jsonb`;
+  await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS suggested_addon_ids JSONB NOT NULL DEFAULT '[]'::jsonb`;
+  await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS adjustment_cents INTEGER NOT NULL DEFAULT 0`;
+  await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS adjustment_reason TEXT`;
+
+  // Status started as a fixed CHECK list; it now needs to grow (deleted,
+  // accepted, declined, scheduled, completed) and will likely grow again, so
+  // drop the CHECK and validate allowed values in application code instead.
+  await rawSql`ALTER TABLE queue_items DROP CONSTRAINT IF EXISTS queue_items_status_check`;
+
   await rawSql`
     CREATE TABLE IF NOT EXISTS audit_log (
       id SERIAL PRIMARY KEY,
