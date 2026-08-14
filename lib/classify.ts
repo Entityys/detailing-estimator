@@ -75,6 +75,15 @@ export async function classifyVehicle(rawText: string | null | undefined): Promi
     };
   }
 
+  // Distinct makes across the whole list, used below to catch cross-brand
+  // collisions — e.g. "GMC Sierra 2500" matching the unrelated "Ram 2500"
+  // entry just because both happen to use the trim number "2500".
+  const allMakeNorms = Array.from(new Set(entries.map((e) => normalize(e.make)))).filter((m) => m && m !== "*");
+
+  function makeWordsPresent(makeNorm: string): boolean {
+    return makeNorm.split(" ").every((mkw) => wordCloseMatch(mkw, inputWords));
+  }
+
   let best: { entry: VehicleMapEntry; score: number } | null = null;
 
   for (const entry of entries) {
@@ -92,8 +101,16 @@ export async function classifyVehicle(rawText: string | null | undefined): Promi
     const modelWords = modelNorm.split(" ");
     const allModelWordsPresent = modelWords.every((mw) => wordCloseMatch(mw, inputWords));
     if (allModelWordsPresent) {
+      const makePresent = makeWordsPresent(makeNorm);
+      if (!makePresent) {
+        // The model matched, but this entry's own make isn't mentioned — if
+        // the lead named a DIFFERENT known make instead, this is almost
+        // certainly the wrong vehicle (different brand, coincidentally same
+        // trim number), so skip it rather than confidently mismatching.
+        const conflictingMake = allMakeNorms.some((m) => m !== makeNorm && makeWordsPresent(m));
+        if (conflictingMake) continue;
+      }
       // Prefer matches where the make also appears (more specific / more confident)
-      const makePresent = makeNorm.split(" ").every((mkw) => wordCloseMatch(mkw, inputWords));
       const score = modelWords.length * 10 + (makePresent ? 5 : 0);
       if (!best || score > best.score) best = { entry, score };
     }
