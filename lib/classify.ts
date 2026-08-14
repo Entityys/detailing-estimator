@@ -33,9 +33,15 @@ function levenshtein(a: string, b: string): number {
   return dp[a.length][b.length];
 }
 
+const ALL_DIGITS = /^\d+$/;
+
 function wordCloseMatch(needle: string, haystackWords: string[]): boolean {
   return haystackWords.some((w) => {
     if (w === needle) return true;
+    // Trim codes (1500 vs 2500 vs 3500, F150 vs F250, etc.) are exact values,
+    // not typo-prone text — a one-digit Levenshtein "typo" there is actually
+    // a different vehicle class, so numeric tokens require an exact match.
+    if (ALL_DIGITS.test(w) || ALL_DIGITS.test(needle)) return false;
     if (Math.min(w.length, needle.length) < 4) return false; // too short to fuzzy-match safely
     return levenshtein(w, needle) <= 1;
   });
