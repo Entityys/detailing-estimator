@@ -86,7 +86,7 @@ export default async function StatsPage() {
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">
       <Header active="stats" />
       <div>
-        <h1 className="text-xl font-medium text-neutral-100">Stats</h1>
+        <h1 className="text-xl font-medium text-neutral-900">Stats</h1>
         <p className="text-sm text-neutral-500 mt-1">How the pipeline&apos;s actually performing.</p>
       </div>
 
@@ -117,18 +117,18 @@ export default async function StatsPage() {
 
       <div className="grid md:grid-cols-2 gap-8">
         <div>
-          <h2 className="text-[15px] font-medium text-neutral-100 mb-3">Revenue by vehicle size</h2>
+          <h2 className="text-[15px] font-medium text-neutral-900 mb-3">Revenue by vehicle size</h2>
           <div className="space-y-2.5">
-            {bySize.length === 0 && <p className="text-sm text-neutral-600">No sent estimates yet.</p>}
+            {bySize.length === 0 && <p className="text-sm text-neutral-400">No sent estimates yet.</p>}
             {bySize.map((r) => (
               <BarRow key={r.tier} label={SIZE_TIER_LABELS[r.tier]} cents={r.cents} maxCents={maxSizeCents} />
             ))}
           </div>
         </div>
         <div>
-          <h2 className="text-[15px] font-medium text-neutral-100 mb-3">Revenue by service (top 5)</h2>
+          <h2 className="text-[15px] font-medium text-neutral-900 mb-3">Revenue by service (top 5)</h2>
           <div className="space-y-2.5">
-            {byService.length === 0 && <p className="text-sm text-neutral-600">No sent estimates yet.</p>}
+            {byService.length === 0 && <p className="text-sm text-neutral-400">No sent estimates yet.</p>}
             {byService.map((r) => (
               <BarRow
                 key={r.category_id}
@@ -146,10 +146,10 @@ export default async function StatsPage() {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+    <div className="bg-white border border-neutral-200 rounded-xl p-5">
       <div className="text-xs text-neutral-500">{label}</div>
-      <div className="text-2xl font-medium text-neutral-100 mt-1.5">{value}</div>
-      <div className="text-xs text-neutral-600 mt-1.5">{sub}</div>
+      <div className="text-2xl font-medium text-neutral-900 mt-1.5">{value}</div>
+      <div className="text-xs text-neutral-400 mt-1.5">{sub}</div>
     </div>
   );
 }
@@ -159,10 +159,10 @@ function BarRow({ label, cents, maxCents }: { label: string; cents: number; maxC
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1">
-        <span className="text-neutral-300 truncate">{label}</span>
+        <span className="text-neutral-700 truncate">{label}</span>
         <span className="text-neutral-500 shrink-0 ml-2">{money(cents)}</span>
       </div>
-      <div className="h-1.5 bg-neutral-900 border border-neutral-800 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-white border border-neutral-200 rounded-full overflow-hidden">
         <div className="h-full bg-accent rounded-full transition-[width] duration-300" style={{ width: `${pct}%` }} />
       </div>
     </div>

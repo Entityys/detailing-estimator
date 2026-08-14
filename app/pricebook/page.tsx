@@ -13,21 +13,21 @@ export default function PriceBookPage() {
     <div className="max-w-5xl mx-auto px-4 py-10 space-y-7">
       <Header active="pricebook" />
       <div>
-        <h1 className="text-xl font-semibold text-neutral-100">Price Book</h1>
+        <h1 className="text-xl font-semibold text-neutral-900">Price Book</h1>
         <p className="text-sm text-neutral-500">
           What every service costs at every size — this is exactly what a lead's request gets matched against.
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-neutral-800">
+      <div className="overflow-x-auto rounded-lg border border-neutral-200">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-neutral-900 border-b border-neutral-800">
-              <th className="text-left px-4 py-3 text-neutral-400 font-medium sticky left-0 bg-neutral-900">
+            <tr className="bg-white border-b border-neutral-200">
+              <th className="text-left px-4 py-3 text-neutral-600 font-medium sticky left-0 bg-white">
                 Service
               </th>
               {TIER_ORDER.map((tier) => (
-                <th key={tier} className="text-right px-4 py-3 text-neutral-400 font-medium whitespace-nowrap">
+                <th key={tier} className="text-right px-4 py-3 text-neutral-600 font-medium whitespace-nowrap">
                   {SIZE_TIER_LABELS[tier]}
                 </th>
               ))}
@@ -37,16 +37,16 @@ export default function PriceBookPage() {
             {SERVICE_CATEGORIES.map((cat, i) => (
               <tr
                 key={cat.id}
-                className={`border-b border-neutral-900 ${i % 2 === 0 ? "bg-neutral-950" : "bg-neutral-900/40"}`}
+                className={`border-b border-neutral-100 ${i % 2 === 0 ? "bg-white" : "bg-neutral-50/40"}`}
               >
                 <td className="px-4 py-3 sticky left-0 bg-inherit">
-                  <div className="text-neutral-100 font-medium">{cat.name}</div>
-                  <div className="text-xs text-neutral-600 max-w-xs truncate" title={cat.description}>
+                  <div className="text-neutral-900 font-medium">{cat.name}</div>
+                  <div className="text-xs text-neutral-400 max-w-xs truncate" title={cat.description}>
                     {cat.description}
                   </div>
                 </td>
                 {TIER_ORDER.map((tier) => (
-                  <td key={tier} className="text-right px-4 py-3 text-neutral-200 font-mono whitespace-nowrap">
+                  <td key={tier} className="text-right px-4 py-3 text-neutral-800 font-mono whitespace-nowrap">
                     {money(cat.pricesCents[tier])}
                   </td>
                 ))}
@@ -57,26 +57,26 @@ export default function PriceBookPage() {
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold text-neutral-100">Add-ons</h2>
+        <h2 className="text-lg font-semibold text-neutral-900">Add-ons</h2>
         <p className="text-sm text-neutral-500">Flat-fee extras on top of any service, pulled from Flyra.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-neutral-800">
+      <div className="overflow-x-auto rounded-lg border border-neutral-200">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-neutral-900 border-b border-neutral-800">
-              <th className="text-left px-4 py-3 text-neutral-400 font-medium">Add-on</th>
-              <th className="text-right px-4 py-3 text-neutral-400 font-medium whitespace-nowrap">Price</th>
+            <tr className="bg-white border-b border-neutral-200">
+              <th className="text-left px-4 py-3 text-neutral-600 font-medium">Add-on</th>
+              <th className="text-right px-4 py-3 text-neutral-600 font-medium whitespace-nowrap">Price</th>
             </tr>
           </thead>
           <tbody>
             {ADD_ONS.map((addon, i) => (
               <tr
                 key={addon.id}
-                className={`border-b border-neutral-900 ${i % 2 === 0 ? "bg-neutral-950" : "bg-neutral-900/40"}`}
+                className={`border-b border-neutral-100 ${i % 2 === 0 ? "bg-white" : "bg-neutral-50/40"}`}
               >
-                <td className="px-4 py-3 text-neutral-100 font-medium">{addon.name}</td>
-                <td className="text-right px-4 py-3 text-neutral-200 font-mono whitespace-nowrap">
+                <td className="px-4 py-3 text-neutral-900 font-medium">{addon.name}</td>
+                <td className="text-right px-4 py-3 text-neutral-800 font-mono whitespace-nowrap">
                   {money(addon.priceCents)}
                 </td>
               </tr>
@@ -85,7 +85,7 @@ export default function PriceBookPage() {
         </table>
       </div>
 
-      <p className="text-xs text-neutral-600">
+      <p className="text-xs text-neutral-400">
         To change a price, edit <code className="text-neutral-500">lib/priceBook.ts</code> and re-sync from Flyra's
         price book — ask me to update it any time.
       </p>

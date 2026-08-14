@@ -58,7 +58,7 @@ export default async function HomePage() {
       <Header active="home" />
 
       <div>
-        <h1 className="text-xl font-medium text-neutral-100">Home</h1>
+        <h1 className="text-xl font-medium text-neutral-900">Home</h1>
         <p className="text-sm text-neutral-500 mt-1">
           {totalAction === 0
             ? "Nothing needs you right now."
@@ -124,18 +124,18 @@ function ActionSection({
       ? "bg-brand/10 text-brand"
       : tone === "accent"
         ? "bg-accent/10 text-accent"
-        : "bg-neutral-800 text-neutral-300";
+        : "bg-neutral-200 text-neutral-700";
 
   return (
     <section>
       <div className="flex items-center justify-between mb-1">
-        <h2 className="text-[15px] font-medium text-neutral-100">{title}</h2>
+        <h2 className="text-[15px] font-medium text-neutral-900">{title}</h2>
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${badgeClass}`}>{count}</span>
       </div>
       <p className="text-xs text-neutral-500 mb-3">{subtitle}</p>
 
       {items.length === 0 ? (
-        <p className="text-sm text-neutral-600 bg-neutral-950 border border-neutral-900 rounded-xl px-4 py-4">
+        <p className="text-sm text-neutral-400 bg-white border border-neutral-100 rounded-xl px-4 py-4">
           No {emptyLabel} right now.
         </p>
       ) : (
@@ -144,15 +144,15 @@ function ActionSection({
             <a
               key={item.id}
               href={href}
-              className="flex items-center justify-between bg-neutral-950 border border-neutral-900 hover:border-neutral-800 rounded-xl px-4 py-3 transition-colors duration-150"
+              className="flex items-center justify-between bg-white border border-neutral-100 hover:border-neutral-200 rounded-xl px-4 py-3 transition-colors duration-150"
             >
               <div>
-                <p className="text-sm text-neutral-100">{item.customer_name || "Unknown"}</p>
+                <p className="text-sm text-neutral-900">{item.customer_name || "Unknown"}</p>
                 <p className="text-xs text-neutral-500 mt-0.5">{item.raw_vehicle_text || "no vehicle info"}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-neutral-300">{money(item.total_price_cents)}</p>
-                <p className="text-xs text-neutral-600 mt-0.5">
+                <p className="text-sm text-neutral-700">{money(item.total_price_cents)}</p>
+                <p className="text-xs text-neutral-400 mt-0.5">
                   {timeAgo(useSentTime ? item.sent_at ?? item.created_at : item.created_at)}
                 </p>
               </div>

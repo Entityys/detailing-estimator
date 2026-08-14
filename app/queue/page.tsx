@@ -59,10 +59,10 @@ function timeAgo(iso: string): string {
 }
 
 const COLUMN_STYLES = {
-  slate: { dot: "bg-slate-400", header: "text-slate-300", border: "border-slate-800", badge: "bg-slate-800 text-slate-300" },
-  amber: { dot: "bg-amber-400", header: "text-amber-300", border: "border-amber-900/60", badge: "bg-amber-900/50 text-amber-300" },
-  blue: { dot: "bg-blue-400", header: "text-blue-300", border: "border-blue-900/60", badge: "bg-blue-900/50 text-blue-300" },
-  emerald: { dot: "bg-emerald-400", header: "text-emerald-300", border: "border-emerald-900/60", badge: "bg-emerald-900/50 text-emerald-300" },
+  slate: { dot: "bg-slate-400", header: "text-slate-600", border: "border-slate-200", badge: "bg-slate-100 text-slate-700" },
+  amber: { dot: "bg-amber-400", header: "text-amber-600", border: "border-amber-200", badge: "bg-amber-100 text-amber-700" },
+  blue: { dot: "bg-blue-400", header: "text-blue-600", border: "border-blue-200", badge: "bg-blue-100 text-blue-700" },
+  emerald: { dot: "bg-emerald-400", header: "text-emerald-600", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700" },
 } as const;
 
 const LIFECYCLE_LABELS: Record<string, string> = {
@@ -76,7 +76,7 @@ const LIFECYCLE_LABELS: Record<string, string> = {
 function CardShell({ color, children }: { color: keyof typeof COLUMN_STYLES; children: React.ReactNode }) {
   const s = COLUMN_STYLES[color];
   return (
-    <div className={`rounded-xl border ${s.border} bg-neutral-900 p-5 space-y-4 transition-colors duration-150`}>
+    <div className={`rounded-xl border ${s.border} bg-white p-5 space-y-4 transition-colors duration-150`}>
       {children}
     </div>
   );
@@ -90,8 +90,8 @@ function CardHeader({ item, color }: { item: QueueItem; color: keyof typeof COLU
         {initial(item.customer_name)}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-neutral-100 truncate">{firstName(item.customer_name)}</div>
-        <div className="text-sm text-neutral-300 truncate">{serviceName(item.matched_category_id)}</div>
+        <div className="font-semibold text-neutral-900 truncate">{firstName(item.customer_name)}</div>
+        <div className="text-sm text-neutral-700 truncate">{serviceName(item.matched_category_id)}</div>
         <div className="text-sm text-neutral-500 truncate">{item.raw_vehicle_text || "vehicle not provided"}</div>
       </div>
     </div>
@@ -104,7 +104,7 @@ function ColumnHeader({ title, count, color }: { title: string; count: number; c
     <div className="flex items-center gap-2 px-1 mb-3 sticky top-0">
       <span className={`h-2 w-2 rounded-full ${s.dot}`} />
       <h2 className={`text-sm font-semibold ${s.header}`}>{title}</h2>
-      <span className="text-xs text-neutral-600 bg-neutral-900 border border-neutral-800 rounded-full px-1.5 py-0.5">
+      <span className="text-xs text-neutral-400 bg-white border border-neutral-200 rounded-full px-1.5 py-0.5">
         {count}
       </span>
     </div>
@@ -117,9 +117,9 @@ function DeleteControl({ itemId }: { itemId: number }) {
       <input
         name="reason"
         placeholder="reason (optional)"
-        className="flex-1 min-w-0 bg-transparent border-0 text-[11px] text-neutral-600 placeholder:text-neutral-700 focus:outline-none focus:text-neutral-400"
+        className="flex-1 min-w-0 bg-transparent border-0 text-[11px] text-neutral-400 placeholder:text-neutral-300 focus:outline-none focus:text-neutral-600"
       />
-      <button type="submit" className="text-[11px] text-neutral-600 hover:text-brand transition-colors duration-150 shrink-0">
+      <button type="submit" className="text-[11px] text-neutral-400 hover:text-brand transition-colors duration-150 shrink-0">
         Delete
       </button>
     </form>
@@ -148,7 +148,7 @@ export default async function QueuePage() {
     <div className="max-w-[1600px] mx-auto px-4 py-10 space-y-7">
       <Header active="queue" />
       <div>
-        <h1 className="text-xl font-medium text-neutral-100">Pipeline</h1>
+        <h1 className="text-xl font-medium text-neutral-900">Pipeline</h1>
         <p className="text-sm text-neutral-500 mt-1">Every active lead, from first text to job done.</p>
       </div>
 
@@ -161,7 +161,7 @@ export default async function QueuePage() {
             {missingInfo.map((item) => (
               <CardShell key={item.id} color="slate">
                 <CardHeader item={item} color="slate" />
-                <div className="text-xs text-neutral-500 border-t border-neutral-800 pt-2">
+                <div className="text-xs text-neutral-500 border-t border-neutral-200 pt-2">
                   Texted asking what they drive · {timeAgo(item.created_at)}
                 </div>
                 <DeleteControl itemId={item.id} />
@@ -175,8 +175,8 @@ export default async function QueuePage() {
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-amber-400" />
-              <h2 className="text-sm font-semibold text-amber-300">Needs Your Review</h2>
-              <span className="text-xs text-neutral-600 bg-neutral-900 border border-neutral-800 rounded-full px-1.5 py-0.5">
+              <h2 className="text-sm font-semibold text-amber-600">Needs Your Review</h2>
+              <span className="text-xs text-neutral-400 bg-white border border-neutral-200 rounded-full px-1.5 py-0.5">
                 {pending.length}
               </span>
             </div>
@@ -184,7 +184,7 @@ export default async function QueuePage() {
               <form action={approveAllConfident}>
                 <button
                   type="submit"
-                  className="text-[11px] bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2 py-1 rounded"
+                  className="text-[11px] bg-neutral-200 hover:bg-neutral-300 text-neutral-700 px-2 py-1 rounded"
                 >
                   Approve all confident ({confidentPendingCount})
                 </button>
@@ -213,14 +213,14 @@ export default async function QueuePage() {
                   {needsAttention && (
                     <form
                       action={updateTierAndCategory.bind(null, item.id)}
-                      className="flex flex-wrap items-end gap-2 bg-neutral-950 border border-amber-900/40 rounded-lg p-2.5"
+                      className="flex flex-wrap items-end gap-2 bg-amber-50 border border-amber-200 rounded-lg p-2.5"
                     >
                       <div className="flex-1 min-w-[100px]">
                         <label className="block text-[10px] uppercase tracking-wide text-neutral-500 mb-1">Size</label>
                         <select
                           name="tier"
                           defaultValue={item.matched_tier ?? ""}
-                          className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-neutral-100"
+                          className="w-full bg-neutral-200 border border-neutral-300 rounded px-2 py-1 text-xs text-neutral-900"
                         >
                           <option value="" disabled>Choose…</option>
                           {Object.entries(SIZE_TIER_LABELS).map(([tier, label]) => (
@@ -233,7 +233,7 @@ export default async function QueuePage() {
                         <select
                           name="categoryId"
                           defaultValue={item.matched_category_id ?? ""}
-                          className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-neutral-100"
+                          className="w-full bg-neutral-200 border border-neutral-300 rounded px-2 py-1 text-xs text-neutral-900"
                         >
                           <option value="" disabled>Choose…</option>
                           {SERVICE_CATEGORIES.map((c) => (
@@ -241,21 +241,21 @@ export default async function QueuePage() {
                           ))}
                         </select>
                       </div>
-                      <button type="submit" className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2.5 py-1.5 rounded">
+                      <button type="submit" className="text-xs bg-neutral-200 hover:bg-neutral-300 text-neutral-800 px-2.5 py-1.5 rounded">
                         Save
                       </button>
                     </form>
                   )}
 
-                  <form action={approve.bind(null, item.id)} className="space-y-2 border-t border-neutral-800 pt-2.5">
+                  <form action={approve.bind(null, item.id)} className="space-y-2 border-t border-neutral-200 pt-2.5">
                     <details className="group">
-                      <summary className="text-xs text-neutral-500 cursor-pointer hover:text-neutral-300 list-none flex items-center gap-1">
+                      <summary className="text-xs text-neutral-500 cursor-pointer hover:text-neutral-700 list-none flex items-center gap-1">
                         <span className="group-open:rotate-90 transition-transform inline-block">▸</span>
-                        Add-ons {suggested.length > 0 && <span className="text-amber-400">({suggested.length} suggested)</span>}
+                        Add-ons {suggested.length > 0 && <span className="text-amber-600">({suggested.length} suggested)</span>}
                       </summary>
                       <div className="mt-2 grid grid-cols-1 gap-1 max-h-40 overflow-y-auto pr-1">
                         {ADD_ONS.map((a) => (
-                          <label key={a.id} className="flex items-center gap-2 text-xs text-neutral-300">
+                          <label key={a.id} className="flex items-center gap-2 text-xs text-neutral-700">
                             <input
                               type="checkbox"
                               name="addonIds"
@@ -264,14 +264,14 @@ export default async function QueuePage() {
                               className="accent-accent"
                             />
                             {a.name}
-                            <span className="text-neutral-600">+{money(a.priceCents)}</span>
+                            <span className="text-neutral-400">+{money(a.priceCents)}</span>
                           </label>
                         ))}
                       </div>
                     </details>
 
                     <details className="group">
-                      <summary className="text-xs text-neutral-500 cursor-pointer hover:text-neutral-300 list-none flex items-center gap-1">
+                      <summary className="text-xs text-neutral-500 cursor-pointer hover:text-neutral-700 list-none flex items-center gap-1">
                         <span className="group-open:rotate-90 transition-transform inline-block">▸</span>
                         Price adjustment
                       </summary>
@@ -281,30 +281,30 @@ export default async function QueuePage() {
                           type="number"
                           step="0.01"
                           placeholder="+/- $"
-                          className="w-24 bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-neutral-100"
+                          className="w-24 bg-neutral-200 border border-neutral-300 rounded px-2 py-1 text-xs text-neutral-900"
                         />
                         <input
                           name="adjustmentReason"
                           placeholder="reason (required if nonzero)"
-                          className="flex-1 min-w-0 bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-neutral-100"
+                          className="flex-1 min-w-0 bg-neutral-200 border border-neutral-300 rounded px-2 py-1 text-xs text-neutral-900"
                         />
                       </div>
                     </details>
 
                     <div className="flex items-center justify-between pt-1">
-                      <span className="font-semibold text-neutral-100">{money(item.total_price_cents)}</span>
+                      <span className="font-semibold text-neutral-900">{money(item.total_price_cents)}</span>
                       <div className="flex gap-2">
                         <button
                           type="submit"
                           formAction={rejectItem.bind(null, item.id)}
-                          className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2.5 py-1.5 rounded-md transition-colors duration-150"
+                          className="text-xs bg-neutral-200 hover:bg-neutral-300 text-neutral-700 px-2.5 py-1.5 rounded-md transition-colors duration-150"
                         >
                           Reject
                         </button>
                         <button
                           type="submit"
                           disabled={!canApprove}
-                          className="text-xs bg-accent hover:bg-accent-dark disabled:bg-neutral-800 disabled:text-neutral-600 text-white px-2.5 py-1.5 rounded-md font-medium transition-colors duration-150"
+                          className="text-xs bg-accent hover:bg-accent-dark disabled:bg-neutral-200 disabled:text-neutral-400 text-white px-2.5 py-1.5 rounded-md font-medium transition-colors duration-150"
                         >
                           Approve
                         </button>
@@ -326,8 +326,8 @@ export default async function QueuePage() {
             {approvedItems.map((item) => (
               <CardShell key={item.id} color="blue">
                 <CardHeader item={item} color="blue" />
-                <div className="flex items-center justify-between border-t border-neutral-800 pt-2.5 text-sm">
-                  <span className="font-semibold text-neutral-100">{money(item.total_price_cents)}</span>
+                <div className="flex items-center justify-between border-t border-neutral-200 pt-2.5 text-sm">
+                  <span className="font-semibold text-neutral-900">{money(item.total_price_cents)}</span>
                   <span className="text-xs text-neutral-500">sends within the hour</span>
                 </div>
                 <DeleteControl itemId={item.id} />
@@ -345,14 +345,14 @@ export default async function QueuePage() {
               <CardShell key={item.id} color="emerald">
                 <CardHeader item={item} color="emerald" />
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-900/50 text-emerald-300">
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
                     {LIFECYCLE_LABELS[item.status] ?? item.status}
                   </span>
                 </div>
-                <div className="flex items-center justify-between border-t border-neutral-800 pt-2.5 text-sm">
-                  <span className="font-semibold text-neutral-100">{money(item.total_price_cents)}</span>
+                <div className="flex items-center justify-between border-t border-neutral-200 pt-2.5 text-sm">
+                  <span className="font-semibold text-neutral-900">{money(item.total_price_cents)}</span>
                   {item.flyra_estimate_link ? (
-                    <a href={item.flyra_estimate_link} target="_blank" rel="noreferrer" className="text-xs text-emerald-400 hover:text-emerald-300">
+                    <a href={item.flyra_estimate_link} target="_blank" rel="noreferrer" className="text-xs text-emerald-600 hover:text-emerald-700">
                       View estimate ↗
                     </a>
                   ) : (
@@ -369,5 +369,5 @@ export default async function QueuePage() {
 }
 
 function EmptyHint({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-neutral-600 px-1">{children}</p>;
+  return <p className="text-sm text-neutral-400 px-1">{children}</p>;
 }

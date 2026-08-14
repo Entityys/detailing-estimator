@@ -22,15 +22,15 @@ function money(cents: number | null): string {
 }
 
 const STATUS_STYLE: Record<string, string> = {
-  sent: "text-emerald-400",
-  accepted: "text-emerald-400",
-  scheduled: "text-emerald-400",
-  completed: "text-emerald-400",
-  declined: "text-red-400",
-  rejected: "text-red-400",
-  deleted: "text-neutral-700",
-  approved: "text-blue-400",
-  pending: "text-amber-400",
+  sent: "text-emerald-600",
+  accepted: "text-emerald-600",
+  scheduled: "text-emerald-600",
+  completed: "text-emerald-600",
+  declined: "text-brand",
+  rejected: "text-brand",
+  deleted: "text-neutral-400",
+  approved: "text-accent",
+  pending: "text-amber-600",
   missing_info: "text-neutral-500",
 };
 
@@ -59,21 +59,21 @@ export default async function LogPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-10 space-y-7">
       <Header active="log" />
-      <h1 className="text-xl font-semibold text-neutral-100">History</h1>
+      <h1 className="text-xl font-semibold text-neutral-900">History</h1>
 
       <div className="space-y-1">
         {rows.map((r) => (
           <div
             key={r.id}
-            className={`flex items-center justify-between bg-neutral-900 border border-neutral-800 rounded px-3 py-2 text-sm ${
+            className={`flex items-center justify-between bg-white border border-neutral-200 rounded px-3 py-2 text-sm ${
               r.status === "deleted" ? "opacity-50" : ""
             }`}
           >
             <div>
-              <span className="text-neutral-100">{r.customer_name || "Unknown"}</span>
+              <span className="text-neutral-900">{r.customer_name || "Unknown"}</span>
               <span className="text-neutral-500"> — {r.raw_vehicle_text || "no vehicle info"}</span>
               {r.matched_tier && (
-                <span className="text-neutral-600">
+                <span className="text-neutral-400">
                   {" "}
                   ({SIZE_TIER_LABELS[r.matched_tier]}
                   {r.matched_category_id
@@ -84,7 +84,7 @@ export default async function LogPage() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-neutral-300">{money(r.total_price_cents)}</span>
+              <span className="text-neutral-700">{money(r.total_price_cents)}</span>
               <span className={`text-xs font-medium ${STATUS_STYLE[r.status] ?? "text-neutral-500"}`}>
                 {STATUS_LABEL[r.status] ?? r.status}
               </span>
