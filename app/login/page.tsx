@@ -1,4 +1,7 @@
 import { login } from "./actions";
+import { SubmitButton } from "./SubmitButton";
+
+export const dynamic = "force-dynamic";
 
 export default async function LoginPage({
   searchParams,
@@ -32,18 +35,14 @@ export default async function LoginPage({
             id="passcode"
             name="passcode"
             type="password"
+            autoComplete="off"
             autoFocus
             required
             className="w-full rounded-md bg-neutral-800 border border-neutral-700 px-3 py-2 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
         {hasError && <p className="text-sm text-red-400">Wrong passcode — try again.</p>}
-        <button
-          type="submit"
-          className="w-full rounded-md bg-brand hover:bg-brand-dark text-white py-2 font-medium transition"
-        >
-          Sign in
-        </button>
+        <SubmitButton />
       </form>
     </div>
   );
