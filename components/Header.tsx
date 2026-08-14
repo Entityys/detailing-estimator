@@ -1,4 +1,5 @@
 const LINKS = [
+  { href: "/home", label: "Home" },
   { href: "/queue", label: "Pipeline" },
   { href: "/pricebook", label: "Price Book" },
   { href: "/vehicles", label: "Size List" },
@@ -10,14 +11,14 @@ const LINKS = [
 export function Header({
   active,
 }: {
-  active: "queue" | "pricebook" | "vehicles" | "templates" | "stats" | "log";
+  active: "home" | "queue" | "pricebook" | "vehicles" | "templates" | "stats" | "log";
 }) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <header className="flex flex-wrap items-center justify-between gap-4 pb-5 mb-6 border-b border-neutral-900">
       <a href="/queue" className="flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="Entity Mobile Detailing" width={40} height={40} className="rounded-lg object-cover" />
-        <span className="font-semibold text-neutral-100 hidden sm:inline">Entity Mobile Detailing</span>
+        <img src="/logo.png" alt="Entity Mobile Detailing" width={36} height={36} className="rounded-lg object-cover" />
+        <span className="font-medium text-neutral-100 hidden sm:inline">Entity Mobile Detailing</span>
       </a>
       <nav className="flex items-center gap-1 flex-wrap">
         {LINKS.map((link) => {
@@ -26,10 +27,10 @@ export function Header({
             <a
               key={link.href}
               href={link.href}
-              className={`text-sm px-3 py-1.5 rounded-md transition whitespace-nowrap ${
+              className={`text-sm px-3 py-2 rounded-md transition-colors duration-150 whitespace-nowrap ${
                 isActive
-                  ? "text-brand font-medium bg-brand/10"
-                  : "text-neutral-400 hover:text-neutral-200"
+                  ? "text-accent font-medium bg-accent/10"
+                  : "text-neutral-500 hover:text-neutral-200"
               }`}
             >
               {link.label}

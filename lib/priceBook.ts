@@ -170,23 +170,28 @@ export interface AddOn {
   id: string;
   name: string;
   priceCents: number;
+  flyraServiceId: string; // real Flyra line-item id, cat_536df2e0-e716-4cb9-a3eb-ac8c816f2c87 (Add-Ons)
   keywords: string[]; // for auto-suggesting from a lead's free-text answers
 }
 
+// Pulled directly from Flyra (flyra_list_services, "Add-Ons" category) on
+// 2026-08-13 — same source of truth as SERVICE_CATEGORIES above.
+export const ADD_ONS_FLYRA_CATEGORY_ID = "cat_536df2e0-e716-4cb9-a3eb-ac8c816f2c87";
+
 export const ADD_ONS: AddOn[] = [
-  { id: "odor_elimination", name: "Odor Elimination", priceCents: 7500, keywords: ["odor", "smell", "smoke"] },
-  { id: "engine_bay_cleaning", name: "Engine Bay Cleaning", priceCents: 5000, keywords: ["engine bay", "engine"] },
-  { id: "stain_removal", name: "Stain Removal", priceCents: 5000, keywords: ["stain"] },
-  { id: "pet_hair_removal", name: "Pet Hair Removal", priceCents: 7500, keywords: ["pet hair", "dog hair", "cat hair", "pet", "dog", "cat"] },
-  { id: "carpet_seat_shampoo", name: "Carpet/Seat Shampoo & Extraction", priceCents: 10000, keywords: ["shampoo", "extraction"] },
-  { id: "leather_conditioning", name: "Leather Conditioning", priceCents: 5000, keywords: ["leather"] },
-  { id: "sap_removal", name: "Sap Removal", priceCents: 5000, keywords: ["sap", "tree sap"] },
-  { id: "headlight_restoration", name: "Headlight Restoration", priceCents: 10000, keywords: ["headlight", "foggy headlight", "yellow headlight"] },
-  { id: "windshield_ceramic_coating", name: "Windshield Ceramic Coating", priceCents: 17500, keywords: ["windshield coating", "rain repellent"] },
-  { id: "interior_plastics_conditioning", name: "Interior Plastics Conditioning", priceCents: 5000, keywords: ["plastic", "dashboard fading"] },
-  { id: "protector_wax", name: "Protector Wax", priceCents: 3000, keywords: ["wax"] },
-  { id: "biohazard_mold_removal", name: "Biohazard/Mold Removal", priceCents: 15000, keywords: ["mold", "mildew", "biohazard"] },
-  { id: "clay_bar_treatment", name: "Clay Bar Treatment", priceCents: 5000, keywords: ["clay bar", "clay"] },
+  { id: "odor_elimination", name: "Odor Elimination", priceCents: 7500, flyraServiceId: "svc_df8c39cd-6b10-4e2d-94ba-7a8ca31abb42", keywords: ["odor", "smell", "smoke"] },
+  { id: "engine_bay_cleaning", name: "Engine Bay Cleaning", priceCents: 5000, flyraServiceId: "svc_0050a8f2-96de-4458-8694-0d096c3e5e15", keywords: ["engine bay", "engine"] },
+  { id: "stain_removal", name: "Stain Removal", priceCents: 5000, flyraServiceId: "svc_c4470859-bce6-4488-accd-3094db8dddb9", keywords: ["stain"] },
+  { id: "pet_hair_removal", name: "Pet Hair Removal", priceCents: 7500, flyraServiceId: "svc_84e98bfd-db7f-4d5f-ab60-d35a67821b92", keywords: ["pet hair", "dog hair", "cat hair", "pet", "dog", "cat"] },
+  { id: "carpet_seat_shampoo", name: "Carpet/Seat Shampoo & Extraction", priceCents: 10000, flyraServiceId: "svc_1542c40b-348c-459e-ac13-af52d61db2ff", keywords: ["shampoo", "extraction"] },
+  { id: "leather_conditioning", name: "Leather Conditioning", priceCents: 5000, flyraServiceId: "svc_49183b20-930e-470a-aecc-9d05eb9ce62a", keywords: ["leather"] },
+  { id: "sap_removal", name: "Sap Removal", priceCents: 5000, flyraServiceId: "svc_5f344f1a-f3f6-4757-9fa1-a860c6106121", keywords: ["sap", "tree sap"] },
+  { id: "headlight_restoration", name: "Headlight Restoration", priceCents: 10000, flyraServiceId: "svc_e0b3b698-ef93-479d-9351-97034be56cdc", keywords: ["headlight", "foggy headlight", "yellow headlight"] },
+  { id: "windshield_ceramic_coating", name: "Windshield Ceramic Coating", priceCents: 17500, flyraServiceId: "svc_5e640589-b131-40c1-b848-3e63d7ad06fe", keywords: ["windshield coating", "rain repellent"] },
+  { id: "interior_plastics_conditioning", name: "Interior Plastics Conditioning", priceCents: 5000, flyraServiceId: "svc_05602105-8b25-4822-aaf6-a311085d039c", keywords: ["plastic", "dashboard fading"] },
+  { id: "protector_wax", name: "Protector Wax", priceCents: 3000, flyraServiceId: "svc_3ffb383c-cce3-4b27-a97a-83f4190e8dad", keywords: ["wax"] },
+  { id: "biohazard_mold_removal", name: "Biohazard/Mold Removal", priceCents: 15000, flyraServiceId: "svc_7a9ff5cb-49f3-4ce4-85c4-7cff2f381d71", keywords: ["mold", "mildew", "biohazard"] },
+  { id: "clay_bar_treatment", name: "Clay Bar Treatment", priceCents: 5000, flyraServiceId: "svc_9b71d0b8-f73c-4564-b9c1-edf22358f2d3", keywords: ["clay bar", "clay"] },
 ];
 
 export function getAddOn(id: string): AddOn | undefined {

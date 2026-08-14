@@ -9,7 +9,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const params = await searchParams;
-  const next = params.next || "/queue";
+  const next = params.next || "/home";
   const hasError = params.error === "1";
 
   return (

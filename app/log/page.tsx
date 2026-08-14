@@ -57,7 +57,7 @@ export default async function LogPage() {
   `) as LogRow[];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-3xl mx-auto px-4 py-10 space-y-7">
       <Header active="log" />
       <h1 className="text-xl font-semibold text-neutral-100">History</h1>
 

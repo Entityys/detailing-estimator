@@ -6,7 +6,7 @@ import { checkPasscode, createSessionToken, SESSION_COOKIE_NAME } from "@/lib/au
 
 export async function login(formData: FormData) {
   const passcode = String(formData.get("passcode") || "");
-  const next = String(formData.get("next") || "/queue");
+  const next = String(formData.get("next") || "/home");
 
   if (!checkPasscode(passcode)) {
     redirect(`/login?error=1&next=${encodeURIComponent(next)}`);

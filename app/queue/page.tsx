@@ -76,7 +76,7 @@ const LIFECYCLE_LABELS: Record<string, string> = {
 function CardShell({ color, children }: { color: keyof typeof COLUMN_STYLES; children: React.ReactNode }) {
   const s = COLUMN_STYLES[color];
   return (
-    <div className={`rounded-xl border ${s.border} bg-neutral-900 p-4 space-y-3 shadow-sm shadow-black/20`}>
+    <div className={`rounded-xl border ${s.border} bg-neutral-900 p-5 space-y-4 transition-colors duration-150`}>
       {children}
     </div>
   );
@@ -119,7 +119,7 @@ function DeleteControl({ itemId }: { itemId: number }) {
         placeholder="reason (optional)"
         className="flex-1 min-w-0 bg-transparent border-0 text-[11px] text-neutral-600 placeholder:text-neutral-700 focus:outline-none focus:text-neutral-400"
       />
-      <button type="submit" className="text-[11px] text-neutral-600 hover:text-red-400 shrink-0">
+      <button type="submit" className="text-[11px] text-neutral-600 hover:text-brand transition-colors duration-150 shrink-0">
         Delete
       </button>
     </form>
@@ -145,18 +145,18 @@ export default async function QueuePage() {
   ).length;
 
   return (
-    <div className="max-w-[1600px] mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-[1600px] mx-auto px-4 py-10 space-y-7">
       <Header active="queue" />
       <div>
-        <h1 className="text-xl font-semibold text-neutral-100">Pipeline</h1>
-        <p className="text-sm text-neutral-500">Every active lead, from first text to job done.</p>
+        <h1 className="text-xl font-medium text-neutral-100">Pipeline</h1>
+        <p className="text-sm text-neutral-500 mt-1">Every active lead, from first text to job done.</p>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-5 overflow-x-auto pb-4">
         {/* Missing info */}
         <div className="min-w-[300px] w-[300px] shrink-0">
           <ColumnHeader title="Waiting on Customer" count={missingInfo.length} color="slate" />
-          <div className="space-y-3">
+          <div className="space-y-4">
             {missingInfo.length === 0 && <EmptyHint>No one's waiting on a reply.</EmptyHint>}
             {missingInfo.map((item) => (
               <CardShell key={item.id} color="slate">
@@ -191,7 +191,7 @@ export default async function QueuePage() {
               </form>
             )}
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {pending.length === 0 && <EmptyHint>Nothing waiting on you right now.</EmptyHint>}
             {pending.map((item) => {
               const canApprove = !!item.matched_tier && !!item.matched_category_id;
@@ -206,7 +206,7 @@ export default async function QueuePage() {
                     <span>{item.phone}</span>
                     {item.city && <span>· {item.city}</span>}
                     {item.far_out_of_area && (
-                      <span className="text-red-400 font-medium">· far out of area</span>
+                      <span className="text-brand font-medium">· far out of area</span>
                     )}
                   </div>
 
@@ -261,7 +261,7 @@ export default async function QueuePage() {
                               name="addonIds"
                               value={a.id}
                               defaultChecked={suggested.includes(a.id)}
-                              className="accent-brand"
+                              className="accent-accent"
                             />
                             {a.name}
                             <span className="text-neutral-600">+{money(a.priceCents)}</span>
@@ -297,14 +297,14 @@ export default async function QueuePage() {
                         <button
                           type="submit"
                           formAction={rejectItem.bind(null, item.id)}
-                          className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2.5 py-1.5 rounded"
+                          className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2.5 py-1.5 rounded-md transition-colors duration-150"
                         >
                           Reject
                         </button>
                         <button
                           type="submit"
                           disabled={!canApprove}
-                          className="text-xs bg-brand hover:bg-brand-dark disabled:bg-neutral-800 disabled:text-neutral-600 text-white px-2.5 py-1.5 rounded font-medium"
+                          className="text-xs bg-accent hover:bg-accent-dark disabled:bg-neutral-800 disabled:text-neutral-600 text-white px-2.5 py-1.5 rounded-md font-medium transition-colors duration-150"
                         >
                           Approve
                         </button>
@@ -321,7 +321,7 @@ export default async function QueuePage() {
         {/* Approved */}
         <div className="min-w-[300px] w-[300px] shrink-0">
           <ColumnHeader title="Approved" count={approvedItems.length} color="blue" />
-          <div className="space-y-3">
+          <div className="space-y-4">
             {approvedItems.length === 0 && <EmptyHint>Nothing queued to send.</EmptyHint>}
             {approvedItems.map((item) => (
               <CardShell key={item.id} color="blue">
@@ -339,7 +339,7 @@ export default async function QueuePage() {
         {/* Sent + lifecycle */}
         <div className="min-w-[300px] w-[300px] shrink-0">
           <ColumnHeader title="Sent" count={sentItems.length} color="emerald" />
-          <div className="space-y-3">
+          <div className="space-y-4">
             {sentItems.length === 0 && <EmptyHint>Nothing sent yet.</EmptyHint>}
             {sentItems.map((item) => (
               <CardShell key={item.id} color="emerald">

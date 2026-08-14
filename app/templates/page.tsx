@@ -10,7 +10,7 @@ export default async function TemplatesPage() {
   const bodyByKey = new Map(rows.map((r) => [r.key, r.body]));
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-2xl mx-auto px-4 py-10 space-y-7">
       <Header active="templates" />
       <div>
         <h1 className="text-xl font-semibold text-neutral-100">Message Templates</h1>
@@ -46,7 +46,7 @@ export default async function TemplatesPage() {
                 </div>
                 <button
                   type="submit"
-                  className="text-xs bg-brand hover:bg-brand-dark text-white px-3 py-1.5 rounded font-medium"
+                  className="text-xs bg-accent hover:bg-accent-dark text-white px-3 py-1.5 rounded font-medium"
                 >
                   Save
                 </button>

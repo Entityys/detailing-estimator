@@ -36,7 +36,7 @@ export default async function VehiclesPage({
   const vehicles = vehiclesRaw as VehicleRow[];
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-2xl mx-auto px-4 py-10 space-y-7">
       <Header active="vehicles" />
       <h1 className="text-xl font-semibold text-neutral-100">Vehicle Size List</h1>
 
@@ -56,7 +56,7 @@ export default async function VehiclesPage({
           />
           <button
             type="submit"
-            className="text-sm bg-brand hover:bg-brand-dark text-white px-4 py-2 rounded font-medium"
+            className="text-sm bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded font-medium"
           >
             Check
           </button>
@@ -108,7 +108,7 @@ export default async function VehiclesPage({
                 </select>
                 <button
                   type="submit"
-                  className="text-xs bg-brand hover:bg-brand-dark text-white px-3 py-1.5 rounded font-medium"
+                  className="text-xs bg-accent hover:bg-accent-dark text-white px-3 py-1.5 rounded font-medium"
                 >
                   Save to list
                 </button>
@@ -161,7 +161,7 @@ export default async function VehiclesPage({
         />
         <button
           type="submit"
-          className="col-span-2 text-sm bg-brand hover:bg-brand-dark text-white py-1.5 rounded font-medium"
+          className="col-span-2 text-sm bg-accent hover:bg-accent-dark text-white py-1.5 rounded font-medium"
         >
           Add vehicle
         </button>
