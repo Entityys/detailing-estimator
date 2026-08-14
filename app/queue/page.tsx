@@ -1,7 +1,7 @@
 import { sql } from "@/lib/db";
 import { SERVICE_CATEGORIES, SIZE_TIER_LABELS, ADD_ONS, type SizeTier } from "@/lib/priceBook";
 import { Header } from "@/components/Header";
-import { approve, rejectItem, updateTierAndCategory, deleteItem, approveAllConfident } from "./actions";
+import { approve, rejectItem, updateTierAndCategory, deleteItem, approveAllConfident, toggleAutoFollowup } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,10 @@ interface QueueItem {
   flyra_estimate_link: string | null;
   sent_at: string | null;
   suggested_addon_ids: string[];
+  auto_followup: boolean;
+  followup_stage: "awaiting_day1" | "awaiting_day3" | "done";
+  followup_day1_sent_at: string | null;
+  followup_day3_sent_at: string | null;
 }
 
 function money(cents: number | null): string {
@@ -87,6 +91,12 @@ const LIFECYCLE_LABELS: Record<string, string> = {
   declined: "Declined",
   scheduled: "Scheduled",
   completed: "Completed",
+};
+
+const FOLLOWUP_LABELS: Record<QueueItem["followup_stage"], string> = {
+  awaiting_day1: "Day 1 follow-up pending",
+  awaiting_day3: "Day 3 follow-up pending",
+  done: "Follow-ups complete",
 };
 
 function CardShell({ color, children }: { color: keyof typeof COLUMN_STYLES; children: React.ReactNode }) {
@@ -381,6 +391,21 @@ export default async function QueuePage() {
                     <span className="text-xs text-neutral-500">{item.sent_at ? timeAgo(item.sent_at) : ""}</span>
                   )}
                 </div>
+
+                {item.status === "sent" && (
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="text-neutral-500">{FOLLOWUP_LABELS[item.followup_stage]}</span>
+                    <form action={toggleAutoFollowup.bind(null, item.id)}>
+                      <input type="hidden" name="enable" value={(!item.auto_followup).toString()} />
+                      <button
+                        type="submit"
+                        className={item.auto_followup ? "text-accent font-medium" : "text-neutral-400"}
+                      >
+                        Follow-ups: {item.auto_followup ? "On" : "Off"}
+                      </button>
+                    </form>
+                  </div>
+                )}
               </CardShell>
             ))}
           </div>

@@ -26,6 +26,18 @@ export const TEMPLATE_DEFS: TemplateDef[] = [
     description: "Sent to the customer the moment you approve an estimate.",
     placeholders: ["firstName", "link"],
   },
+  {
+    key: "followup_day1",
+    label: "Follow-up — day 1",
+    description: "Sent one day after an estimate goes out if the customer hasn't responded, when auto follow-up is on for that lead.",
+    placeholders: ["firstName", "link"],
+  },
+  {
+    key: "followup_day3",
+    label: "Follow-up — day 3",
+    description: "Sent two days after the day-1 follow-up if there's still no response.",
+    placeholders: ["firstName", "link"],
+  },
 ];
 
 function interpolate(body: string, vars: Record<string, string>): string {

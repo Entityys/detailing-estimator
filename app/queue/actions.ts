@@ -146,3 +146,14 @@ export async function approveAllConfident() {
 
   revalidatePath("/queue");
 }
+
+// Per-lead on/off switch for the day-1/day-3 follow-up automation. Flips
+// whatever the current value is — the checkbox's own defaultChecked in the
+// UI is what the owner is actually toggling against.
+export async function toggleAutoFollowup(queueItemId: number, formData: FormData) {
+  await requireSession();
+  const next = formData.get("enable") === "true";
+  await sql`UPDATE queue_items SET auto_followup = ${next} WHERE id = ${queueItemId}`;
+  await logEvent(queueItemId, "auto_followup_toggled", next ? "on" : "off");
+  revalidatePath("/queue");
+}

@@ -108,6 +108,16 @@ export async function initSchema() {
   // drop the CHECK and validate allowed values in application code instead.
   await rawSql`ALTER TABLE queue_items DROP CONSTRAINT IF EXISTS queue_items_status_check`;
 
+  // Follow-up automation: day-1 then day-3 nudge after an estimate is sent,
+  // toggleable per lead. Stage advances awaiting_day1 -> awaiting_day3 ->
+  // done; it only matters once status='sent', and stops mattering the
+  // moment status moves on (accepted/declined/etc.) since the trackable
+  // query below only looks at status='sent' rows.
+  await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS auto_followup BOOLEAN NOT NULL DEFAULT true`;
+  await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS followup_stage TEXT NOT NULL DEFAULT 'awaiting_day1'`;
+  await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS followup_day1_sent_at TIMESTAMPTZ`;
+  await rawSql`ALTER TABLE queue_items ADD COLUMN IF NOT EXISTS followup_day3_sent_at TIMESTAMPTZ`;
+
   await rawSql`
     CREATE TABLE IF NOT EXISTS audit_log (
       id SERIAL PRIMARY KEY,
@@ -207,12 +217,25 @@ const DEFAULT_TEMPLATES: { key: string; label: string; body: string }[] = [
     label: "Estimate sent to customer",
     body: "Hi {{firstName}}, thanks for reaching out to Entity Mobile Detailing! Here's your estimate: {{link}}",
   },
+  {
+    key: "followup_day1",
+    label: "Follow-up — day 1",
+    body: "Hi {{firstName}}, just following up on the estimate we sent over — here it is again in case it got buried: {{link}}. Let me know if you have any questions!",
+  },
+  {
+    key: "followup_day3",
+    label: "Follow-up — day 3",
+    body: "Hi {{firstName}}, wanted to check in one more time on your detailing estimate: {{link}}. Happy to answer any questions or get you on the schedule whenever works for you.",
+  },
 ];
 
+// Insert-if-missing per key (not gated on the table being totally empty) so
+// newly added DEFAULT_TEMPLATES entries still land for existing installs.
 export async function seedTemplatesIfEmpty() {
-  const [{ count }] = await rawSql`SELECT COUNT(*)::int AS count FROM message_templates`;
-  if (count > 0) return;
   for (const t of DEFAULT_TEMPLATES) {
-    await rawSql`INSERT INTO message_templates (key, label, body) VALUES (${t.key}, ${t.label}, ${t.body})`;
+    await rawSql`
+      INSERT INTO message_templates (key, label, body) VALUES (${t.key}, ${t.label}, ${t.body})
+      ON CONFLICT (key) DO NOTHING
+    `;
   }
 }
