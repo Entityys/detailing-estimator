@@ -1,5 +1,7 @@
 import { sql } from "@/lib/db";
 import { SIZE_TIER_LABELS, type SizeTier } from "@/lib/priceBook";
+
+const TIER_ORDER: SizeTier[] = ["SMALL", "MEDIUM", "LARGE", "XL", "MINI_VAN", "CARGO_VAN"];
 import { classifyVehicle } from "@/lib/classify";
 import { Header } from "@/components/Header";
 import { addVehicle, deleteVehicle } from "./actions";
@@ -167,26 +169,44 @@ export default async function VehiclesPage({
         </button>
       </form>
 
-      <div className="space-y-1">
-        {vehicles.map((v) => (
-          <div
-            key={v.id}
-            className="flex items-center justify-between bg-white border border-neutral-200 rounded px-3 py-2 text-sm"
-          >
-            <div>
-              <span className="text-neutral-900">
-                {v.make} {v.model}
-              </span>
-              <span className="text-neutral-500"> — {SIZE_TIER_LABELS[v.tier]}</span>
-              {v.notes && <span className="text-neutral-400 text-xs"> ({v.notes})</span>}
-            </div>
-            <form action={deleteVehicle.bind(null, v.id)}>
-              <button type="submit" className="text-neutral-400 hover:text-brand text-xs">
-                Remove
-              </button>
-            </form>
-          </div>
-        ))}
+      <div className="space-y-3">
+        {TIER_ORDER.map((tier) => {
+          const tierVehicles = vehicles.filter((v) => v.tier === tier);
+          if (tierVehicles.length === 0) return null;
+          return (
+            <details key={tier} className="bg-white border border-neutral-200 rounded-lg group">
+              <summary className="flex items-center justify-between px-4 py-3 cursor-pointer select-none">
+                <span className="text-sm font-medium text-neutral-900">{SIZE_TIER_LABELS[tier]}</span>
+                <span className="flex items-center gap-2">
+                  <span className="text-xs text-neutral-400 bg-neutral-100 rounded-full px-2 py-0.5">
+                    {tierVehicles.length}
+                  </span>
+                  <span className="text-neutral-400 group-open:rotate-180 transition-transform inline-block text-xs">▾</span>
+                </span>
+              </summary>
+              <div className="space-y-1 px-4 pb-4">
+                {tierVehicles.map((v) => (
+                  <div
+                    key={v.id}
+                    className="flex items-center justify-between bg-neutral-50 border border-neutral-100 rounded px-3 py-2 text-sm"
+                  >
+                    <div>
+                      <span className="text-neutral-900">
+                        {v.make} {v.model}
+                      </span>
+                      {v.notes && <span className="text-neutral-400 text-xs"> ({v.notes})</span>}
+                    </div>
+                    <form action={deleteVehicle.bind(null, v.id)}>
+                      <button type="submit" className="text-neutral-400 hover:text-brand text-xs">
+                        Remove
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            </details>
+          );
+        })}
       </div>
     </div>
   );

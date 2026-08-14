@@ -25,6 +25,7 @@ interface QueueItem {
   far_out_of_area: boolean;
   status: string;
   created_at: string;
+  reviewed_at: string | null;
   flyra_estimate_link: string | null;
   sent_at: string | null;
   suggested_addon_ids: string[];
@@ -56,6 +57,21 @@ function timeAgo(iso: string): string {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function isStale(iso: string, hoursThreshold: number): boolean {
+  const hrs = (Date.now() - new Date(iso).getTime()) / 3_600_000;
+  return hrs >= hoursThreshold;
+}
+
+function AgeLabel({ iso, hoursThreshold, prefix = "" }: { iso: string; hoursThreshold: number; prefix?: string }) {
+  const stale = isStale(iso, hoursThreshold);
+  return (
+    <span className={stale ? "text-brand font-medium" : ""}>
+      {prefix}
+      {timeAgo(iso)}
+    </span>
+  );
 }
 
 const COLUMN_STYLES = {
@@ -162,7 +178,8 @@ export default async function QueuePage() {
               <CardShell key={item.id} color="slate">
                 <CardHeader item={item} color="slate" />
                 <div className="text-xs text-neutral-500 border-t border-neutral-200 pt-2">
-                  Texted asking what they drive · {timeAgo(item.created_at)}
+                  Texted asking what they drive ·{" "}
+                  <AgeLabel iso={item.created_at} hoursThreshold={48} />
                 </div>
                 <DeleteControl itemId={item.id} />
               </CardShell>
@@ -202,12 +219,15 @@ export default async function QueuePage() {
               return (
                 <CardShell key={item.id} color="amber">
                   <CardHeader item={item} color="amber" />
-                  <div className="text-xs text-neutral-500 flex items-center gap-2">
+                  <div className="text-xs text-neutral-500 flex items-center gap-2 flex-wrap">
                     <span>{item.phone}</span>
                     {item.city && <span>· {item.city}</span>}
                     {item.far_out_of_area && (
                       <span className="text-brand font-medium">· far out of area</span>
                     )}
+                    <span>
+                      · <AgeLabel iso={item.created_at} hoursThreshold={48} />
+                    </span>
                   </div>
 
                   {needsAttention && (
@@ -328,7 +348,9 @@ export default async function QueuePage() {
                 <CardHeader item={item} color="blue" />
                 <div className="flex items-center justify-between border-t border-neutral-200 pt-2.5 text-sm">
                   <span className="font-semibold text-neutral-900">{money(item.total_price_cents)}</span>
-                  <span className="text-xs text-neutral-500">sends within the hour</span>
+                  <span className="text-xs text-neutral-500">
+                    approved <AgeLabel iso={item.reviewed_at ?? item.created_at} hoursThreshold={1} />
+                  </span>
                 </div>
                 <DeleteControl itemId={item.id} />
               </CardShell>
