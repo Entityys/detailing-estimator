@@ -30,9 +30,9 @@ export function verifySessionToken(token: string | undefined | null): boolean {
 }
 
 export function checkPasscode(input: string): boolean {
-  const configured = process.env.OWNER_PASSCODE || "";
+  const configured = (process.env.OWNER_PASSCODE || "").trim();
   if (!configured) return false;
-  const inputBuf = Buffer.from(input);
+  const inputBuf = Buffer.from(input.trim());
   const configuredBuf = Buffer.from(configured);
   if (inputBuf.length !== configuredBuf.length) return false;
   return timingSafeEqual(inputBuf, configuredBuf);
